@@ -192,7 +192,7 @@ double *femElasticitySolve(femProblem *theProblem)
     }
 
     // Solve the system and return the solution
-    femFullSystemEliminate(theSystem);
+    femFullSystemCG(theSystem);
     memcpy(theProblem->soluce, theSystem->B, theSystem->size * sizeof(double));
     return theProblem->soluce;
 }

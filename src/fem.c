@@ -737,6 +737,79 @@
      return(mySystem->B);    
  }
  
+ double *femFullSystemCG(femFullSystem *mySystem)
+{
+    int size = mySystem->size;
+    double **A = mySystem->A;
+    double *b = mySystem->B;
+    double *x = malloc(size * sizeof(double));
+    double *r = malloc(size * sizeof(double));
+    double *p = malloc(size * sizeof(double));
+    double *Ap = malloc(size * sizeof(double));
+    int maxIter = 1000;
+    double tol = 1e-10;
+    // Initial guess: x = 0
+    for (int i = 0; i < size; i++)
+        x[i] = 0.0;
+
+    // r = b - A * x = b
+    for (int i = 0; i < size; i++)
+        r[i] = b[i];
+
+    // p = r
+    for (int i = 0; i < size; i++)
+        p[i] = r[i];
+
+    double rsOld = 0.0;
+    for (int i = 0; i < size; i++)
+        rsOld += r[i] * r[i];
+
+    for (int iter = 0; iter < maxIter; iter++) {
+        // Ap = A * p
+        for (int i = 0; i < size; i++) {
+            Ap[i] = 0.0;
+            for (int j = 0; j < size; j++)
+                Ap[i] += A[i][j] * p[j];
+        }
+
+        double alphaNum = rsOld;
+        double alphaDen = 0.0;
+        for (int i = 0; i < size; i++)
+            alphaDen += p[i] * Ap[i];
+
+        double alpha = alphaNum / alphaDen;
+
+        // x = x + alpha * p
+        // r = r - alpha * Ap
+        for (int i = 0; i < size; i++) {
+            x[i] += alpha * p[i];
+            r[i] -= alpha * Ap[i];
+        }
+
+        double rsNew = 0.0;
+        for (int i = 0; i < size; i++)
+            rsNew += r[i] * r[i];
+
+        if (sqrt(rsNew) < tol) {
+            printf("CG converged in %d iterations\n", iter+1);
+            break;
+        }
+
+        double beta = rsNew / rsOld;
+        for (int i = 0; i < size; i++)
+            p[i] = r[i] + beta * p[i];
+
+        rsOld = rsNew;
+    }
+
+    // On stocke la solution dans mySystem->B
+    for (int i = 0; i < size; i++)
+        mySystem->B[i] = x[i];
+
+    free(x); free(r); free(p); free(Ap);
+    return mySystem->B;
+}
+
  void  femFullSystemConstrain(femFullSystem *mySystem, 
                               int myNode, double myValue) 
  {

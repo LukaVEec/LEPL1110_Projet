@@ -70,8 +70,25 @@ endif()
 target_compile_definitions(${EXEC_NAME} PRIVATE graphic)
 
 # add a custom target so we can do make run directly
-add_custom_target(run_test COMMAND exec DEPENDS testFem COMMENT "./exec")
-add_custom_target(run_py COMMAND python3 ${CMAKE_SOURCE_DIR}/fixmesh.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} COMMENT "Exécution du script Python")
-add_custom_target(run COMMAND ${EXEC_NAME} DEPENDS ${EXEC_NAME} COMMENT "./${EXEC_NAME}")
+
+add_custom_target(run_test
+    COMMAND ${CMAKE_COMMAND} -E echo "Running exec..."
+    COMMAND $<TARGET_FILE:exec>
+    DEPENDS exec
+    COMMENT "Exécution de l'exécutable exec"
+)
+
+add_custom_target(run_py
+    COMMAND ${CMAKE_COMMAND} -E echo "Running fixmesh.py..."
+    COMMAND python3 ${CMAKE_SOURCE_DIR}/fixmesh.py
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Exécution du script Python"
+)
 
 
+add_custom_target(run
+    COMMAND ${CMAKE_COMMAND} -E echo "Running myFem..."
+    COMMAND $<TARGET_FILE:${EXEC_NAME}>
+    DEPENDS ${EXEC_NAME}
+    COMMENT "Exécution de l'exécutable myFem"
+)
