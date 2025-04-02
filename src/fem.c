@@ -341,110 +341,110 @@
  }
  
  void geoMeshGenerate(int nCircles) {
-     if (nCircles < 2) {
-         printf("Error: A chain is composed of at least 2 links :) .\n");
-         return;
-     }
- 
-     double r0 = 1.0; // Rayon des cercles principaux
-     double r1 = 0.3; // Rayon des trous
-     double s = 0.7;  // Espacement entre les cercles
-     int ierr;
-     double lc = 0.4;
- 
-     double theta_0 = M_PI / 4;
-     double theta_2 = -M_PI / 4;
-     double theta_3 = 3 * M_PI / 4;
-     double theta_4 = -3 * M_PI / 4;
- 
-     int curveCount = 0;
-     int curves[200]; // Tableau pour stocker les IDs des courbes
-     int holeLoops[100]; // Tableau pour stocker les IDs des trous
- 
-     int prevPoint1 = -1, prevPoint2 = -1; // Points des cercles précédents
- 
-     // Création de la partie supérieure de la géométrie
-     for (int i = 0; i < nCircles; i++) {
-         double xCenter[3] = {i * (2 * r0 + s), 0, 0}; // Centre du cercle courant
- 
-         // Création des arcs selon la position du cercle
-         if (i == 0) {
-             // Premier cercle : arc entre pi/4 et -pi/4
-             int idArc1 = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r0, -1, theta_0, theta_2, NULL, 0, NULL, 0, &ierr);
-             curves[curveCount++] = idArc1;
-         } else if(i == nCircles - 1) {
- 
-             // Centre du cercle précédent
-             double xPrevCenter[3] = {(i - 1) * (2 * r0 + s), 0, 0};
-             int prevPoint1 = gmshModelOccAddPoint(xPrevCenter[0] + r0 * cos(theta_0), xPrevCenter[1] + r0 * sin(theta_0), xPrevCenter[2], lc, -1, &ierr);
-             int prevPoint2 = gmshModelOccAddPoint(xPrevCenter[0] + r0 * cos(theta_2), xPrevCenter[1] + r0 * sin(theta_2), xPrevCenter[2], lc, -1, &ierr);
-             // Point pour le cercle courant
-             int point1 = gmshModelOccAddPoint(xCenter[0] + r0 * cos(theta_3), xCenter[1] + r0 * sin(theta_3), xCenter[2], lc, -1, &ierr);
-             int point2 = gmshModelOccAddPoint(xCenter[0] + r0 * cos(theta_4), xCenter[1] + r0 * sin(theta_4), xCenter[2], lc, -1, &ierr);
-             // Segment reliant les cercles
-             int line1 = gmshModelOccAddLine(prevPoint1, point1, -1, &ierr);
-             int line2 = gmshModelOccAddLine(prevPoint2, point2, -1, &ierr);
-             curves[curveCount++] = line1;
-             curves[curveCount++] = line2;
-             // Dernier cercle : définition de l'arc sur lequel on impose la condition de Neumann
-             int idArc1 = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r0, -1, theta_0, theta_3, NULL, 0, NULL, 0, &ierr);
-             int idArc2 = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r0, -1, theta_2, theta_0, NULL, 0, NULL, 0, &ierr);
-             int idArc3 = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r0, -1, theta_4, theta_2, NULL, 0, NULL, 0, &ierr);
-             
-             curves[curveCount++] = idArc1;
-             curves[curveCount++] = idArc2;
-             curves[curveCount++] = idArc3;
-         }
-         else {
-             // Centre du cercle précédent
-             double xPrevCenter[3] = {(i - 1) * (2 * r0 + s), 0, 0};
-             int prevPoint1 = gmshModelOccAddPoint(xPrevCenter[0] + r0 * cos(theta_0), xPrevCenter[1] + r0 * sin(theta_0), xPrevCenter[2], lc, -1, &ierr);
-             int prevPoint2 = gmshModelOccAddPoint(xPrevCenter[0] + r0 * cos(theta_2), xPrevCenter[1] + r0 * sin(theta_2), xPrevCenter[2], lc, -1, &ierr);
-             
-             // Point pour le cercle courant
-             int point1 = gmshModelOccAddPoint(xCenter[0] + r0 * cos(theta_3), xCenter[1] + r0 * sin(theta_3), xCenter[2], lc, -1, &ierr);
-             int point2 = gmshModelOccAddPoint(xCenter[0] + r0 * cos(theta_4), xCenter[1] + r0 * sin(theta_4), xCenter[2], lc, -1, &ierr);
-         
-             // Segment reliant les cercles
-             int line1 = gmshModelOccAddLine(prevPoint1, point1, -1, &ierr);
-             int line2 = gmshModelOccAddLine(prevPoint2, point2, -1, &ierr);
-             curves[curveCount++] = line1;
-             curves[curveCount++] = line2;
- 
-             // Cercles intermédiaires : arc supérieur
-             int idArc1 = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r0, -1, theta_0, theta_3, NULL, 0, NULL, 0, &ierr);
-             int idArc2 = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r0, -1, theta_4, theta_2, NULL, 0, NULL, 0, &ierr);
-             curves[curveCount++] = idArc1;
-             curves[curveCount++] = idArc2;
-         }
- 
-         // Création des trous
-         int holeId = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r1, -1, 0, 2 * M_PI, NULL, 0, NULL, 0, &ierr);
-         int holeLoop = gmshModelOccAddCurveLoop(&holeId, 1, -1, &ierr);
-         holeLoops[i] = holeLoop;
-     }
- 
-     printf("Number of curves %d \n", curveCount);
- 
-     // Création de la curveloop extérieure
-     int curveLoop = gmshModelOccAddCurveLoop(curves, curveCount, -1, &ierr);
- 
-     // Ajout des trous à la surface
-     int surfaces[1 + nCircles];
-     surfaces[0] = curveLoop;
-     for (int i = 0; i < nCircles; i++) {
-         surfaces[i + 1] = -holeLoops[i];
-     }
- 
-     // Création de la surface plane
-     gmshModelOccAddPlaneSurface(surfaces, 1 + nCircles, -1, &ierr);
- 
-     // Synchronisation et génération du maillage
-     gmshModelOccSynchronize(&ierr);
-     gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
-     gmshModelMeshGenerate(2, &ierr);
-     //gmshFltkRun(&ierr);
- }
+    if (nCircles < 2) {
+        printf("Error: A chain is composed of at least 2 links :) .\n");
+        return;
+    }
+
+    double r0 = 1.0; // Rayon des cercles principaux
+    double r1 = 0.3; // Rayon des trous
+    double s = 0.7;  // Espacement entre les cercles
+    int ierr;
+    double lc = 0.4;
+
+    double theta_0 = M_PI / 4;
+    double theta_2 = -M_PI / 4;
+    double theta_3 = 3 * M_PI / 4;
+    double theta_4 = -3 * M_PI / 4;
+
+    int curveCount = 0;
+    int curves[200]; // Tableau pour stocker les IDs des courbes
+    int holeLoops[100]; // Tableau pour stocker les IDs des trous
+
+    int prevPoint1 = -1, prevPoint2 = -1; // Points des cercles précédents
+
+    // Création de la partie supérieure de la géométrie
+    for (int i = 0; i < nCircles; i++) {
+        double xCenter[3] = {i * (2 * r0 + s), 0, 0}; // Centre du cercle courant
+
+        // Création des arcs selon la position du cercle
+        if (i == 0) {
+            // Premier cercle : arc entre pi/4 et -pi/4
+            int idArc1 = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r0, -1, theta_0, theta_2, NULL, 0, NULL, 0, &ierr);
+            curves[curveCount++] = idArc1;
+        } else if(i == nCircles - 1) {
+
+            // Centre du cercle précédent
+            double xPrevCenter[3] = {(i - 1) * (2 * r0 + s), 0, 0};
+            int prevPoint1 = gmshModelOccAddPoint(xPrevCenter[0] + r0 * cos(theta_0), xPrevCenter[1] + r0 * sin(theta_0), xPrevCenter[2], lc, -1, &ierr);
+            int prevPoint2 = gmshModelOccAddPoint(xPrevCenter[0] + r0 * cos(theta_2), xPrevCenter[1] + r0 * sin(theta_2), xPrevCenter[2], lc, -1, &ierr);
+            // Point pour le cercle courant
+            int point1 = gmshModelOccAddPoint(xCenter[0] + r0 * cos(theta_3), xCenter[1] + r0 * sin(theta_3), xCenter[2], lc, -1, &ierr);
+            int point2 = gmshModelOccAddPoint(xCenter[0] + r0 * cos(theta_4), xCenter[1] + r0 * sin(theta_4), xCenter[2], lc, -1, &ierr);
+            // Segment reliant les cercles
+            int line1 = gmshModelOccAddLine(prevPoint1, point1, -1, &ierr);
+            int line2 = gmshModelOccAddLine(prevPoint2, point2, -1, &ierr);
+            curves[curveCount++] = line1;
+            curves[curveCount++] = line2;
+            // Dernier cercle : définition de l'arc sur lequel on impose la condition de Neumann
+            int idArc1 = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r0, -1, theta_0, theta_3, NULL, 0, NULL, 0, &ierr);
+            int idArc2 = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r0, -1, theta_2, theta_0, NULL, 0, NULL, 0, &ierr);
+            int idArc3 = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r0, -1, theta_4, theta_2, NULL, 0, NULL, 0, &ierr);
+            
+            curves[curveCount++] = idArc1;
+            curves[curveCount++] = idArc2;
+            curves[curveCount++] = idArc3;
+        }
+        else {
+            // Centre du cercle précédent
+            double xPrevCenter[3] = {(i - 1) * (2 * r0 + s), 0, 0};
+            int prevPoint1 = gmshModelOccAddPoint(xPrevCenter[0] + r0 * cos(theta_0), xPrevCenter[1] + r0 * sin(theta_0), xPrevCenter[2], lc, -1, &ierr);
+            int prevPoint2 = gmshModelOccAddPoint(xPrevCenter[0] + r0 * cos(theta_2), xPrevCenter[1] + r0 * sin(theta_2), xPrevCenter[2], lc, -1, &ierr);
+            
+            // Point pour le cercle courant
+            int point1 = gmshModelOccAddPoint(xCenter[0] + r0 * cos(theta_3), xCenter[1] + r0 * sin(theta_3), xCenter[2], lc, -1, &ierr);
+            int point2 = gmshModelOccAddPoint(xCenter[0] + r0 * cos(theta_4), xCenter[1] + r0 * sin(theta_4), xCenter[2], lc, -1, &ierr);
+        
+            // Segment reliant les cercles
+            int line1 = gmshModelOccAddLine(prevPoint1, point1, -1, &ierr);
+            int line2 = gmshModelOccAddLine(prevPoint2, point2, -1, &ierr);
+            curves[curveCount++] = line1;
+            curves[curveCount++] = line2;
+
+            // Cercles intermédiaires : arcs
+            int idArc1 = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r0, -1, theta_0, theta_3, NULL, 0, NULL, 0, &ierr);
+            int idArc2 = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r0, -1, theta_4, theta_2, NULL, 0, NULL, 0, &ierr);
+            curves[curveCount++] = idArc1;
+            curves[curveCount++] = idArc2;
+        }
+
+        // Création des trous
+        int holeId = gmshModelOccAddCircle(xCenter[0], xCenter[1], xCenter[2], r1, -1, 0, 2 * M_PI, NULL, 0, NULL, 0, &ierr);
+        int holeLoop = gmshModelOccAddCurveLoop(&holeId, 1, -1, &ierr);
+        holeLoops[i] = holeLoop;
+    }
+
+    printf("Number of curves %d \n", curveCount);
+
+    // Création de la curveloop extérieure
+    int curveLoop = gmshModelOccAddCurveLoop(curves, curveCount, -1, &ierr);
+
+    // Ajout des trous à la surface
+    int surfaces[1 + nCircles];
+    surfaces[0] = curveLoop;
+    for (int i = 0; i < nCircles; i++) {
+        surfaces[i + 1] = -holeLoops[i];
+    }
+
+    // Création de la surface plane
+    gmshModelOccAddPlaneSurface(surfaces, 1 + nCircles, -1, &ierr);
+
+    // Synchronisation et génération du maillage
+    gmshModelOccSynchronize(&ierr);
+    gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
+    gmshModelMeshGenerate(2, &ierr);
+    //gmshFltkRun(&ierr);
+}
  
  static const double _gaussQuad4Xsi[4]    = {-0.577350269189626,-0.577350269189626, 0.577350269189626, 0.577350269189626};
  static const double _gaussQuad4Eta[4]    = { 0.577350269189626,-0.577350269189626,-0.577350269189626, 0.577350269189626};

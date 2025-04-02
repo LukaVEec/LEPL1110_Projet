@@ -42,7 +42,7 @@ int main(void)
     double E   = 211.e9;
     double nu  = 0.3;
     double rho = 7.85e3; 
-    double g   = 9.81;
+    double g   = 0.0;
     femProblem* theProblem = femElasticityCreate(theGeometry,E,nu,rho,g,PLANAR_STRAIN);
     char nameDomain[MAXNAME];
 
@@ -54,7 +54,7 @@ int main(void)
     
     femElasticityAddBoundaryCondition(theProblem,"Domain1",DIRICHLET_X,0.0);
     femElasticityAddBoundaryCondition(theProblem,"Domain1",DIRICHLET_Y,0.0);
-    femElasticityAddBoundaryCondition(theProblem,"Domain2",NEUMANN_X,1000);
+    femElasticityAddBoundaryCondition(theProblem,"Domain2",NEUMANN_X,1e2);
     
     femElasticityPrint(theProblem);
 
@@ -72,7 +72,7 @@ int main(void)
 //
     
     femNodes *theNodes = theGeometry->theNodes;
-    double deformationFactor = 1e3;
+    double deformationFactor = 1e6;
     double *normDisplacement = malloc(theNodes->nNodes * sizeof(double));
     double *forcesX = malloc(theNodes->nNodes * sizeof(double));
     double *forcesY = malloc(theNodes->nNodes * sizeof(double));
