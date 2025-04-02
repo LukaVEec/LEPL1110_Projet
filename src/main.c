@@ -18,11 +18,6 @@ double fun(double x, double y)
 
 int main(void)
 {  
-    printf("\n\n    V : Mesh and displacement norm \n");
-    printf("    D : Domains \n");
-    printf("    X : Horizontal residuals for unconstrained equations \n");
-    printf("    Y : Horizontal residuals for unconstrained equations \n");
-    printf("    N : Next domain highlighted\n\n\n");
 
     geoInitialize();
     femGeo* theGeometry = geoGetGeometry();
@@ -31,7 +26,7 @@ int main(void)
     theGeometry->elementType = FEM_TRIANGLE;
   
     //geoMeshGenerate(4);
-    geoMeshRead("data/new_fix.txt");
+    geoMeshRead("data/fixed.txt");
     //geoMeshImport();
     char name[MAXNAME];
     geoSetDomainName(0,"Domain1");

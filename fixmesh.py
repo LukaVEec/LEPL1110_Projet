@@ -104,6 +104,6 @@ if __name__ == "__main__":
     print(mesh)
     mesh.unfuck()
     print(mesh)
-    mesh.write("data/new_fix.txt")
+    mesh.write("data/fixed.txt")
 
 # %%

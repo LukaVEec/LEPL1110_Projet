@@ -18,7 +18,7 @@
  
  femGeo *geoGetGeometry()                        { return &theGeometry; }
  
- double geoSizeDefault(double x, double y)       { return 0.25; }
+ double geoSizeDefault(double x, double y)       { return 0.15; }
  
  double geoGmshSize(int dim, int tag, double x, double y, double z, double lc, void *data)
                                                  { return theGeometry.geoSize(x,y);    }

@@ -6,9 +6,6 @@ all:
 	mkdir -p $(BUILD_DIR)
 	cd $(BUILD_DIR) && cmake .. && make
 
-fix:
-	python fixmesh.py
-
 run: all
 	@echo "Génération du maillage..."
 	./$(BUILD_DIR)/$(GENERATE) $(C)
@@ -17,4 +14,6 @@ run: all
 	./$(BUILD_DIR)/$(EXECUTABLE)
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) 
+	rm -f data/elasticity.txt
+	rm -f data/fixed.txt
