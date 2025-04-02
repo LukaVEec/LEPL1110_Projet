@@ -104,7 +104,7 @@
      int shiftEdges = elem[0];
      gmshFree(node);
      gmshFree(elem);
-     printf("Geo     : Importing %d edges \n",theEdges->nElem);
+     
    
      gmshModelMeshGetElementsByType(2,&elem,&nElem,
                                 &node,&nNode,-1,0,1,&ierr);    ErrorGmsh(ierr);
@@ -120,7 +120,7 @@
        theGeometry.theElements = theElements;
        gmshFree(node);
        gmshFree(elem);
-       printf("Geo     : Importing %d triangles \n",theElements->nElem); }
+      }
      
      int nElemTriangles = nElem;
      gmshModelMeshGetElementsByType(3,&elem,&nElem,
@@ -140,7 +140,7 @@
        theGeometry.theElements = theElements;
        gmshFree(node);
        gmshFree(elem);
-       printf("Geo     : Importing %d quads \n",theElements->nElem); }
+        }
  
      
      /* Importing 1D entities */
@@ -149,8 +149,7 @@
      gmshModelGetEntities(&dimTags,&n,1,&ierr);        ErrorGmsh(ierr);
      theGeometry.nDomains = n/2;
      theGeometry.theDomains = malloc(sizeof(femDomain*)*n/2);
-     printf("Geo     : Importing %d entities \n",theGeometry.nDomains);
- 
+    
      for (int i=0; i < n/2; i++) {
          int dim = dimTags[2*i+0];
          int tag = dimTags[2*i+1];
@@ -166,7 +165,6 @@
          theDomain->elem = malloc(sizeof(int)*2*theDomain->nElem); 
          for (int j = 0; j < theDomain->nElem; j++) {
              theDomain->elem[j] = elementTags[0][j] - shiftEdges; }
-         printf("Geo     : Entity %d : %d elements \n",i,theDomain->nElem);
          gmshFree(nElementTags);
          gmshFree(nNodesTags);
          gmshFree(elementTags);
@@ -224,20 +222,15 @@
  {
     FILE* file = fopen(filename,"w");
     
-    printf("Debugging\n");
     femNodes *theNodes = theGeometry.theNodes;
-    printf("%d\n",theNodes->nNodes);
     fprintf(file, "Number of nodes %d \n", theNodes->nNodes);
-    printf("Debugging2\n");
     for (int i = 0; i < theNodes->nNodes; i++) {
        fprintf(file,"%6d : %14.7e %14.7e \n",i,theNodes->X[i],theNodes->Y[i]); }
-    //////////////////////////////////////////////////////
     femMesh *theEdges = theGeometry.theEdges;
     fprintf(file,"Number of edges %d \n", theEdges->nElem);
     int *elem = theEdges->elem;
     for (int i = 0; i < theEdges->nElem; i++) {
        fprintf(file,"%6d : %6d %6d \n",i,elem[2*i],elem[2*i+1]); }
-/////////////////////////////////////////////////////////////////
        femMesh *theElements = theGeometry.theElements;
     if (theElements->nLocalNode == 3) {
        fprintf(file,"Number of triangles %d \n", theElements->nElem);

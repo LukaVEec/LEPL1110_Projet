@@ -54,7 +54,7 @@ int main(void)
     
     femElasticityAddBoundaryCondition(theProblem,"Domain1",DIRICHLET_X,0.0);
     femElasticityAddBoundaryCondition(theProblem,"Domain1",DIRICHLET_Y,0.0);
-    femElasticityAddBoundaryCondition(theProblem,"Domain2",NEUMANN_X,1e8);
+    femElasticityAddBoundaryCondition(theProblem,"Domain2",NEUMANN_X,1000);
     
     femElasticityPrint(theProblem);
 
