@@ -6,7 +6,10 @@ all:
 	mkdir -p $(BUILD_DIR)
 	cd $(BUILD_DIR) && cmake .. && make
 
-mesh: 
+solve:
+	
+	./$(BUILD_DIR)/$(EXECUTABLE)
+	@echo "Simulation terminée." 
 
 
 run: all
