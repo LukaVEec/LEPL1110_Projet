@@ -8,18 +8,20 @@ Dans ce projet nous analysons la déformation en tensions planes d'une chaîne d
 ### make
 Compile et crée le dossier build du projet
 
-### make run -C -P
+### make run -C 
 Cette commande permet de compiler et exécuter le projet. Il génère d'abord un maillage, le répare avec le fichier fixmesh.py et résout le problème d'élasticité linéaire. 
 #### Arguments
-- Il  est possible de ne pas avoir tous les warnings ainsi que les print des programmes en spécifiant P=0
-- En exécutant cette commande il est impératif de specifier le nombre de disques pour la chaîne vous désirez avec C
+
+- Vous pouvez également choisir le nombre de disques pour la géométrie pour augmenter la taille de la chaîne. Il est déconseillé d'en mettre plus qu'une dizaine pour éviter un temps de résolution qui prend plusieurs minutes.
+
+La commande make run sans arguments ne crée pas de nouveau maillage et affiche la résolution pour 4 disques.
 
 Exemple
 ```bash
 make run C=4 P=0
 make run C=6
+make run
 ````
-Afin de ne pas créer un système de résolution trop grand (qui pourrait prendre beaucoup de temps à résoudre), nous conseillons de ne pas faire plus de 8 disques.
 
 ### make generate -C
 Cette commande génère juste le maillage et lance l'interface de gmsh pour la visualiser.

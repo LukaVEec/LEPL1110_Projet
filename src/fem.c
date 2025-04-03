@@ -748,7 +748,7 @@
     double *Ap = malloc(size * sizeof(double));
     int maxIter = 1000;
     double tol = 1e-10;
-    // Initial guess: x = 0
+    // initialisation : x = 0
     for (int i = 0; i < size; i++)
         x[i] = 0.0;
 
@@ -791,7 +791,7 @@
             rsNew += r[i] * r[i];
 
         if (sqrt(rsNew) < tol) {
-            printf("CG converged in %d iterations\n", iter+1);
+            printf("\nGC converged in %d iterations\n\n", iter+1);
             break;
         }
 

@@ -1,10 +1,16 @@
 BUILD_DIR = build
 EXECUTABLE = myFem
 GENERATE = exec
+C ?= 4
 
 all:
+ifeq ($(OS),Windows_NT)
+	if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
+else
 	mkdir -p $(BUILD_DIR)
+endif
 	cd $(BUILD_DIR) && cmake .. && make
+
 
 solve:
 	
@@ -13,18 +19,19 @@ solve:
 
 
 run: all
-ifeq ($(PRINT),0)
-	@echo "Génération du maillage..."
-	./$(BUILD_DIR)/$(GENERATE) $(C) > /dev/null 2>&1
-	@echo "Réparation du maillage..."
-	python fixmesh.py > /dev/null 2>&1
+
+ifeq ($(C),4)
 	@echo "Résolution du système..."
-	./$(BUILD_DIR)/$(EXECUTABLE) > /dev/null 2>&1
+	./$(BUILD_DIR)/$(EXECUTABLE) $(C)
 	@echo "Simulation terminée."
-else 
+else
+	@echo "Génération du maillage..."
 	./$(BUILD_DIR)/$(GENERATE) $(C)
-	python fixmesh.py
-	./$(BUILD_DIR)/$(EXECUTABLE)
+	@echo "Réparation du maillage..."
+	python fixmesh.py 
+	@echo "Résolution du système..."
+	./$(BUILD_DIR)/$(EXECUTABLE) $(C)
+	@echo "Simulation terminée."
 endif
 
 clean:

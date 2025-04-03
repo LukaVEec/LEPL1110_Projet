@@ -16,17 +16,21 @@ double fun(double x, double y)
     return 1;
 }
 
-int main(void)
+int main(int argc, char *argv[]) 
 {  
 
     geoInitialize();
     femGeo* theGeometry = geoGetGeometry();
     
-  
+    int generate = atoi(argv[1]);
     theGeometry->elementType = FEM_TRIANGLE;
-  
+    
     //geoMeshGenerate(4);
-    geoMeshRead("data/fixed.txt");
+    if(generate==4){
+        geoMeshRead("data/basic.txt");
+    } else {
+        geoMeshRead("data/fixed.txt");
+    }
     //geoMeshImport();
     char name[MAXNAME];
     geoSetDomainName(0,"Domain1");
