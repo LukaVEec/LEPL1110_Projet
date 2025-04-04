@@ -47,13 +47,13 @@ int main(int argc, char *argv[])
     double nu  = 0.3;
     double rho = 7.85e3; 
     double g   = 0.0;
-    femProblem* theProblem = femElasticityCreate(theGeometry,E,nu,rho,g,PLANAR_STRAIN);
+    femProblem* theProblem = femElasticityCreate(theGeometry,E,nu,rho,g,PLANAR_STRESS);
     char nameDomain[MAXNAME];
 
     
     femElasticityAddBoundaryCondition(theProblem,"Domain1",DIRICHLET_X,0.0);
     femElasticityAddBoundaryCondition(theProblem,"Domain1",DIRICHLET_Y,0.0);
-    femElasticityAddBoundaryCondition(theProblem,"Domain2",NEUMANN_X,1000);
+    femElasticityAddBoundaryCondition(theProblem,"Domain2",NEUMANN_X,1e3);
     
     femElasticityPrint(theProblem);
 
