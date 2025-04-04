@@ -50,11 +50,6 @@ int main(int argc, char *argv[])
     femProblem* theProblem = femElasticityCreate(theGeometry,E,nu,rho,g,PLANAR_STRAIN);
     char nameDomain[MAXNAME];
 
-    for(int i = 0; i<theGeometry->nDomains; i++) {
-        femDomain* theDomain = theGeometry->theDomains[i];
-        printf("Domain %d : %s \n",i,theDomain->name);
-        femElasticityAddBoundaryCondition(theProblem,theDomain->name,DIRICHLET_Y,0.0);
-    }
     
     femElasticityAddBoundaryCondition(theProblem,"Domain1",DIRICHLET_X,0.0);
     femElasticityAddBoundaryCondition(theProblem,"Domain1",DIRICHLET_Y,0.0);
@@ -65,7 +60,6 @@ int main(int argc, char *argv[])
 //
 //  -3- Resolution du probleme et calcul des forces
 //
-
     double *theSoluce = femElasticitySolve(theProblem);
     double *theForces = femElasticityForces(theProblem);
     double area = femElasticityIntegrate(theProblem, fun);   

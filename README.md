@@ -12,7 +12,7 @@ Compile et crée le dossier build du projet
 Cette commande permet de compiler et exécuter le projet. Il génère d'abord un maillage, le répare avec le fichier fixmesh.py et résout le problème d'élasticité linéaire. 
 #### Arguments
 
-- Vous pouvez également choisir le nombre de disques pour la géométrie pour augmenter la taille de la chaîne. Il est déconseillé d'en mettre plus qu'une dizaine pour éviter un temps de résolution qui prend plusieurs minutes.
+- Vous pouvez également choisir le nombre de disques pour la géométrie pour augmenter la taille de la chaîne. 
 
 La commande make run sans arguments ne crée pas de nouveau maillage et affiche la résolution pour 4 disques.
 

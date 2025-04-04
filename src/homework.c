@@ -1,9 +1,8 @@
 #include "fem.h"
 
-// Strip : BEGIN
-double **A_copy = NULL;
-double *B_copy  = NULL;
-// Strip : END
+
+double **new_A = NULL; double *new_B = NULL;
+
 
 void femElasticityAssembleElements(femProblem *theProblem)
 {
@@ -98,24 +97,19 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
 
     for (iBnd = 0; iBnd < theProblem->nBoundaryConditions; iBnd++)
     {
-        // Strip : BEGIN
         femBoundaryCondition *theCondition = theProblem->conditions[iBnd];
         femBoundaryType type = theCondition->type;
         femDomain *domain = theCondition->domain;
         double value = theCondition->value;
 
-        // Skip Dirichlet boundary conditions
         if (type == DIRICHLET_X || type == DIRICHLET_Y) { continue; }
 
         int shift = (type == NEUMANN_X) ? 0 : 1;
         
-        // Iterate over the elements of the domain
         for (iEdge = 0; iEdge < domain->nElem; iEdge++)
         {
-            // Get the element index (mapping)
             iElem = domain->elem[iEdge];
 
-            // Mapping local nodes to global nodes
             for (j = 0; j < nLocal; j++)
             {
                 map[j] = theEdges->elem[iElem * nLocal + j];
@@ -124,23 +118,18 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                 y[j] = theNodes->Y[map[j]];
             }
             
-            // Compute the constant Jacobian
             double dx = x[1] - x[0];
             double dy = y[1] - y[0];
             double length = sqrt(dx * dx + dy * dy);
             double jac = length / 2;
 
-            // Iterate over the integration points
             for (iInteg = 0; iInteg < theRule->n; iInteg++)
             {
-                // Get the integration point coordinates and weight
                 double xsi    = theRule->xsi[iInteg];
                 double weight = theRule->weight[iInteg];
 
-                // Compute the shape functions
                 femDiscretePhi(theSpace, xsi, phi);
 
-                // Compute the forces and add them to the load vector
                 for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value * jac * weight; }
             }
         }
@@ -154,33 +143,29 @@ double *femElasticitySolve(femProblem *theProblem)
 
     femFullSystemInit(theSystem);
 
-    // Assembly of stiffness matrix and load vector
     femElasticityAssembleElements(theProblem);
 
-    // Assembly of Neumann boundary conditions
     femElasticityAssembleNeumann(theProblem);
 
-    // Get the size of the system
     int size = theSystem->size;
 
 
-    // Allocate memory for the copy of the stiffness matrix A and the load vector B
-    if (A_copy == NULL)
+    if (new_A == NULL)
     {
-        A_copy = (double **) malloc(sizeof(double *) * size);
-        for (int i = 0; i < size; i++) { A_copy[i] = (double *) malloc(sizeof(double) * size); }
+        new_A = (double **) malloc(sizeof(double *) * size);
+        for (int i = 0; i < size; i++) { new_A[i] = (double *) malloc(sizeof(double) * size); }
     }
-    if (B_copy == NULL) { B_copy = (double *) malloc(sizeof(double) * size); }
+    if (new_B == NULL) { new_B = (double *) malloc(sizeof(double) * size); }
 
-    // Copy the stiffness matrix A and the load vector B
+   
     for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j < size; j++) { A_copy[i][j] = theSystem->A[i][j];  }
-        B_copy[i] = theSystem->B[i];
+        for (int j = 0; j < size; j++) { new_A[i][j] = theSystem->A[i][j];  }
+        new_B[i] = theSystem->B[i];
        
     }
 
-    // Apply Dirichlet boundary conditions (costraints the nodes)
+    
     int *theConstrainedNodes = theProblem->constrainedNodes;
     for (int i = 0; i < size; i++)
     {
@@ -191,9 +176,18 @@ double *femElasticitySolve(femProblem *theProblem)
         }
     }
 
-    // Solve the system and return the solution
-    femFullSystemCG(theSystem);
-    memcpy(theProblem->soluce, theSystem->B, theSystem->size * sizeof(double));
+    femSparseSystem *sparseSystem = femConvertFullToCSR(theSystem);
+    double *solution = femSparseSystemCG(sparseSystem);
+    memcpy(theSystem->B, solution, size * sizeof(double));
+    memcpy(theProblem->soluce, solution, size * sizeof(double));
+
+    // Nettoyage mémoire
+    free(solution);
+    free(sparseSystem->rowPtr);
+    free(sparseSystem->colInd);
+    free(sparseSystem->values);
+    free(sparseSystem->rhs);
+    free(sparseSystem);
     return theProblem->soluce;
 }
 
@@ -203,26 +197,20 @@ double *femElasticityForces(femProblem *theProblem)
     double *soluce    = theProblem->soluce;
     int size = theProblem->system->size;
 
-    // Allocate memory for residuals if not already done
     if (residuals == NULL) { residuals = (double *) malloc(sizeof(double) * size); }
 
-    // Initialize residuals to zero
     for (int i = 0; i < size; i++) { residuals[i] = 0.0; }
 
-    /*
-    Compute residuals: R = A * U - B where A and B are the system matrix
-    and load vector before applying Dirichlet boundary conditions.
-    */
+  
     for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j < size; j++) { residuals[i] += A_copy[i][j] * soluce[j]; }
-        residuals[i] -= B_copy[i];
+        for (int j = 0; j < size; j++) { residuals[i] += new_A[i][j] * soluce[j]; }
+        residuals[i] -= new_B[i];
     }
 
-    // Free memory allocated for the copy of the stiffness matrix A and the load vector B
-    for (int i = 0; i < size; i++) { free(A_copy[i]); A_copy[i] = NULL;}
-    free(A_copy); free(B_copy);
-    A_copy = NULL; B_copy = NULL;
+    for (int i = 0; i < size; i++) { free(new_A[i]); new_A[i] = NULL;}
+    free(new_A); free(new_B);
+    new_A = NULL; new_B = NULL;
 
     return residuals;
 }

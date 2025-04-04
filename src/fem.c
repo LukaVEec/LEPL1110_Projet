@@ -634,23 +634,16 @@
          for (i=0; i < n; i++) {           
              femDiscretePhi(mySpace,xsi[i],phi);
              femDiscreteDphi(mySpace,xsi[i],dphidxsi);
-             for (j=0; j < n; j++)  {
-                 printf("(xsi=%+.1f) : ",xsi[i]);
-                 printf(" phi(%d)=%+.1f",j,phi[j]);  
-                 printf("   dphidxsi(%d)=%+.1f \n",j,dphidxsi[j]); }
-             printf(" \n"); }}
+         }}
+           
      
      if (mySpace->type == FEM_QUAD || mySpace->type == FEM_TRIANGLE) {
          femDiscreteXsi2(mySpace, xsi, eta);
          for (i = 0; i < n; i++)  {    
              femDiscretePhi2(mySpace, xsi[i], eta[i], phi);
              femDiscreteDphi2(mySpace, xsi[i], eta[i], dphidxsi, dphideta);
-             for (j = 0; j < n; j++) {  
-                 printf("(xsi=%+.1f,eta=%+.1f) : ", xsi[i], eta[i]);  
-                 printf(" phi(%d)=%+.1f", j, phi[j]);
-                 printf("   dphidxsi(%d)=%+.1f", j, dphidxsi[j]);
-                 printf("   dphideta(%d)=%+.1f \n", j, dphideta[j]); }
-             printf(" \n"); }}   
+             
+            }}   
  }
  
  femFullSystem *femFullSystemCreate(int size)
@@ -746,8 +739,8 @@
     double *r = malloc(size * sizeof(double));
     double *p = malloc(size * sizeof(double));
     double *Ap = malloc(size * sizeof(double));
-    int maxIter = 1000;
-    double tol = 1e-10;
+    int maxIter = 2000;
+    double tol = 1e-6;
     // initialisation : x = 0
     for (int i = 0; i < size; i++)
         x[i] = 0.0;
@@ -808,6 +801,109 @@
 
     free(x); free(r); free(p); free(Ap);
     return mySystem->B;
+}
+
+femSparseSystem *femConvertFullToCSR(femFullSystem *full) {
+    int n = full->size;
+    int maxNNZ = n * n; // sur-allocation
+    int *rowPtr = malloc((n+1) * sizeof(int));
+    int *colInd = malloc(maxNNZ * sizeof(int));
+    double *values = malloc(maxNNZ * sizeof(double));
+    double *rhs = malloc(n * sizeof(double));
+    
+    int nnz = 0;
+    rowPtr[0] = 0;
+    
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            double val = full->A[i][j];
+            if (fabs(val) > 1e-14) {
+                values[nnz] = val;
+                colInd[nnz] = j;
+                nnz++;
+            }
+        }
+        rowPtr[i+1] = nnz;
+        rhs[i] = full->B[i]; // second membre
+    }
+
+    // Réalloue pile à la bonne taille
+    values = realloc(values, nnz * sizeof(double));
+    colInd = realloc(colInd, nnz * sizeof(int));
+
+    femSparseSystem *sparse = malloc(sizeof(femSparseSystem));
+    sparse->n = n;
+    sparse->rowPtr = rowPtr;
+    sparse->colInd = colInd;
+    sparse->values = values;
+    sparse->rhs = rhs;
+    
+    return sparse;
+}
+
+void sparseMatVecMult(const femSparseSystem *A, const double *x, double *y) {
+    for (int i = 0; i < A->n; i++) {
+        y[i] = 0.0;
+        for (int k = A->rowPtr[i]; k < A->rowPtr[i+1]; k++) {
+            y[i] += A->values[k] * x[A->colInd[k]];
+        }
+    }
+}
+
+double* femSparseSystemCG(femSparseSystem *A) {
+    int n = A->n;
+    double *x = calloc(n, sizeof(double)); // Solution initialisée à 0
+    double *r = malloc(n * sizeof(double));
+    double *p = malloc(n * sizeof(double));
+    double *Ap = malloc(n * sizeof(double));
+
+    // Initialisation : r = b - A*x = b (car x = 0)
+    for (int i = 0; i < n; i++)
+        r[i] = A->rhs[i];
+    
+    for (int i = 0; i < n; i++)
+        p[i] = r[i];
+
+    double rsOld = 0.0;
+    for (int i = 0; i < n; i++)
+        rsOld += r[i] * r[i];
+
+    int maxIter = 20000;
+    double tol = 1e-6;
+
+    for (int iter = 0; iter < maxIter; iter++) {
+        sparseMatVecMult(A, p, Ap);
+
+        double alphaNum = rsOld;
+        double alphaDen = 0.0;
+        for (int i = 0; i < n; i++)
+            alphaDen += p[i] * Ap[i];
+
+        double alpha = alphaNum / alphaDen;
+
+        for (int i = 0; i < n; i++) {
+            x[i] += alpha * p[i];
+            r[i] -= alpha * Ap[i];
+        }
+
+        double rsNew = 0.0;
+        for (int i = 0; i < n; i++)
+            rsNew += r[i] * r[i];
+
+        if (sqrt(rsNew) < tol) {
+            printf("CG sparse converged in %d iterations\n", iter+1);
+            break;
+        }
+
+        double beta = rsNew / rsOld;
+        for (int i = 0; i < n; i++)
+            p[i] = r[i] + beta * p[i];
+
+        rsOld = rsNew;
+    }
+
+    free(r); free(p); free(Ap);
+    return x;
 }
 
  void  femFullSystemConstrain(femFullSystem *mySystem, 

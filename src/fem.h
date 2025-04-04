@@ -86,6 +86,14 @@ typedef struct {
     int size;
 } femFullSystem;
 
+typedef struct {
+    int     n;          // taille du système
+    int    *rowPtr;     // début de chaque ligne (taille n+1)
+    int    *colInd;     // indices des colonnes (taille = nnz)
+    double *values;     // valeurs non nulles (taille = nnz)
+    double *rhs;        // second membre
+} femSparseSystem;
+
 
 typedef struct {
     femDomain* domain;
@@ -158,6 +166,9 @@ void                femFullSystemInit(femFullSystem* mySystem);
 void                femFullSystemAlloc(femFullSystem* mySystem, int size);
 double*             femFullSystemEliminate(femFullSystem* mySystem);
 double*             femFullSystemCG(femFullSystem *mySystem);
+femSparseSystem*    femConvertFullToCSR(femFullSystem *full);
+double*    femSparseSystemCG(femSparseSystem *mySystem);
+void                sparseMatVecMult(const femSparseSystem *A, const double *x, double *y);
 
 void                femFullSystemConstrain(femFullSystem* mySystem, int myNode, double value);
 
