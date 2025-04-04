@@ -6,7 +6,7 @@ Dans ce projet nous analysons la déformation en tensions planes d'une chaîne d
 
 ## Compilation et exécution
 ### Warnings
-**Attention pour ce projet nous utilisons gmsh, ce qui signifie que à la compilation il faut avoir la bonne version de gmsh dans le dossier gmsh. Nous avons ajouté toutes les versions de gmsh disponibles donc cela ne devrait pas poser de problèmes mais il faut tout de mêle vérifier si la version de votre système d'exploitation est bien présente.**
+**Attention pour ce projet nous utilisons gmsh, ce qui signifie que à la compilation il faut avoir la bonne version de gmsh dans le dossier gmsh. Nous avons ajouté toutes les versions de gmsh disponibles donc cela ne devrait pas poser de problèmes mais il faut tout de même vérifier si la version de votre système d'exploitation est bien présente.**
 
 ### make
 Compile et crée le dossier build du projet
